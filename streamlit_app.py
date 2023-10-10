@@ -27,7 +27,7 @@ st.markdown(
 
 
     ### Want to learn more?
-    - Check out the [github repo](https://github.com/paulbqnt/hiram)
+    - Check out the [github repo](https://github.com/paulbqnt/hiram-dashboard)
     - See all my other projects here: [github profile](https://github.com/paulbqnt/)
     - Jump into my [website](https://paulboquant.com/)
     - Ask me a question on [Linkedin](https://www.linkedin.com/in/paulboquant/)
