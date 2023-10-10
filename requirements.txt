@@ -1,0 +1,6 @@
+streamlit==1.27.2
+pandas==2.1.1
+numpy==1.26.0
+plotly==5.17.0
+yfinance==0.2.31
+git+ssh://git@gitlab.com/paulbqnt/hiram.git@package-implementation
