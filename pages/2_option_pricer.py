@@ -7,7 +7,7 @@ from hiram.facade import OptionFacade
 from hiram.market_data import MarketData
 from hiram.payoff import VanillaPayoff, call_payoff, put_payoff
 from hiram.engine import BlackScholesPricingEngine, BlackScholesPricer, MonteCarloPricingEngine, MonteCarloPricerVanilla
-import hiram.plot as hiram_plot
+import hiram.plot as h
 import plotly.express as px
 st.set_page_config(page_title="Hiram Dashboard - Pricer", page_icon="chart_with_upwards_trend")
 px.defaults.width = 1000
@@ -155,20 +155,20 @@ class MyStreamlitOptionPricer:
                 option_is_call = 0
 
             if selected_model == "Black Scholes":
-                st.plotly_chart(hiram_plot.plot_payoff_vanilla(facade=facade_temp, type_plot="black_scholes"),
+                st.plotly_chart(h.plot_payoff_vanilla(facade=facade_temp, type_plot="black_scholes"),
                                 use_container_width=True)
             if selected_model == "Monte Carlo":
-                st.plotly_chart(hiram_plot.plot_payoff_vanilla(facade=facade_temp, type_plot="black_scholes"),
+                st.plotly_chart(h.plot_payoff_vanilla(facade=facade_temp, type_plot="black_scholes"),
                                 use_container_width=True)
 
             add_vertical_space(2)
             st.markdown("<h3 align='center'>Visualization of the Greeks</h3>", unsafe_allow_html=True)
 
-            st.plotly_chart(hiram_plot.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="delta"), use_container_width=True)
-            st.plotly_chart(hiram_plot.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="gamma"), use_container_width=True)
-            st.plotly_chart(hiram_plot.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="vega"), use_container_width=True)
-            st.plotly_chart(hiram_plot.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="theta"), use_container_width=True)
-            st.plotly_chart(hiram_plot.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="rho"), use_container_width=True)
+            st.plotly_chart(h.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="delta"), use_container_width=True)
+            st.plotly_chart(h.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="gamma"), use_container_width=True)
+            st.plotly_chart(h.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="vega"), use_container_width=True)
+            st.plotly_chart(h.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="theta"), use_container_width=True)
+            st.plotly_chart(h.plot_greeks(facade=facade_temp, is_call=option_is_call, type_plot="rho"), use_container_width=True)
 
 
 my_app = MyStreamlitOptionPricer()
