@@ -53,7 +53,7 @@ class MyStreamlitOptionPricer:
     def main_content(self):
         st.header('Hiram Option Pricing Dashboard')
         st.markdown("<h6 align='left'>Made by Paul Boquant</h6>", unsafe_allow_html=True)
-        selected_model = st.radio("Select which pricing model you want to use", ["Black Scholes", "Monte Carlo"])
+        selected_model = st.radio("Select which pricer you want to use", ["Black Scholes", "Monte Carlo"])
 
         cols = st.columns([2, 1, 2])
 
