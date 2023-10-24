@@ -4,7 +4,7 @@ pandas==2.1.1
 numpy==1.26.0
 plotly==5.17.0
 yfinance==0.2.31
-hiram @ git+https://github.com/paulbqnt/hiram@package-implementation
+hiram @ git+https://github.com/paulbqnt/hiram@main
 pip==22.3.1
 
 
