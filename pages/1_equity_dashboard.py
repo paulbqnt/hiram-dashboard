@@ -3,7 +3,7 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 import plotly.express as px
-import hiram
+import hiram_pricing
 
 
 
@@ -58,10 +58,10 @@ class MyStreamlitEquityDashboard:
         print(f"self.selected_stocks:  {self.selected_stocks}")
         df_raw = yf.download(dropdown, start, end)
 
-        df_returns = df_to_cumulative_returns(df_raw['Adj Close'])
+        df_returns = df_to_cumulative_returns(df_raw['Close'])
 
         fig = px.line(
-            df_raw['Adj Close'],
+            df_raw['Close'],
             title=f"<b>Stock price of {nice_dropdown}</b>"
         )
         fig.update_traces(textposition="top center")

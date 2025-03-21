@@ -3,11 +3,11 @@ from streamlit_extras.add_vertical_space import add_vertical_space
 import pandas as pd
 import yfinance as yf
 import numpy as np
-from hiram.facade import OptionFacade
-from hiram.market_data import MarketData
-from hiram.payoff import VanillaPayoff, call_payoff, put_payoff
-from hiram.engine import BlackScholesPricingEngine, BlackScholesPricer, MonteCarloPricingEngine, MonteCarloPricerVanilla
-import hiram.plot as h
+from hiram_pricing.facade import OptionFacade
+from hiram_pricing.market_data import MarketData
+from hiram_pricing.payoff import VanillaPayoff, call_payoff, put_payoff
+from hiram_pricing.engine import BlackScholesPricingEngine, BlackScholesPricer, MonteCarloPricingEngine, MonteCarloPricerVanilla
+import hiram_pricing.plot as h
 import plotly.express as px
 st.set_page_config(page_title="Hiram Dashboard - Pricer", page_icon="chart_with_upwards_trend")
 px.defaults.width = 1000
@@ -23,7 +23,7 @@ def df_to_cumulative_returns(input_df):
 
 def get_last_price(ticker):
     df_temp = yf.download(ticker)
-    last_price = df_temp['Adj Close'][-1]
+    last_price = df_temp['Close'][-1]
     return last_price
 
 
