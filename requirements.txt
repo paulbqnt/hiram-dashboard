@@ -1,8 +1,0 @@
-streamlit==1.43.2
-streamlit-extras==0.3.4
-pandas>=2.2.3,<3.0
-numpy>=2.2.4
-plotly==5.17.0
-yfinance==0.2.55
-hiram-pricing @ git+https://github.com/paulbqnt/hiram-pricing@master
-pip==22.3.1
