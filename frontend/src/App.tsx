@@ -1,13 +1,19 @@
+// App.tsx
 import './App.css'
-
-import { Button } from "@/components/ui/button"
+import { ThemeProvider } from "@/components/theme-provider";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
 
 function App() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-svh">
-            <Button>Click me</Button>
-        </div>
-    )
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Router>
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                </Routes>
+            </Router>
+        </ThemeProvider>
+    );
 }
 
-export default App
+export default App;
