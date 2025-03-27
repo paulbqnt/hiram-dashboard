@@ -1,18 +1,17 @@
-// App.tsx
-import './App.css'
-import { ThemeProvider } from "@/components/theme-provider";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import HomePage from "./pages/Home/HomePage";
+import React from 'react';
+import { RouterProvider, Router } from '@tanstack/react-router';
+import { MantineProvider } from '@mantine/core';
+import { router } from './routes';
 
-function App() {
+const router = new Router({ router });
+
+const App: React.FC = () => {
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <Router>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                </Routes>
-            </Router>
-        </ThemeProvider>
+        <MantineProvider>
+            <RouterProvider router={router}>
+                {/* Your app components go here */}
+            </RouterProvider>
+        </MantineProvider>
     );
 }
 
