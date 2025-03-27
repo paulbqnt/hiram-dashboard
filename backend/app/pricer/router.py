@@ -1,6 +1,5 @@
-from http.client import HTTPException
-from fastapi import APIRouter
-from .model import MarketDataRequest
+from fastapi import APIRouter, HTTPException
+from .model import OptionPricingRequest, PricingResult
 from .service import PricerService
 
 router = APIRouter(
@@ -10,17 +9,10 @@ router = APIRouter(
 
 pricerService = PricerService()
 
-@router.post("/options/price")
-def calculate_option_price(market_data_request: MarketDataRequest):
+@router.post("/options/price", response_model=PricingResult)
+def calculate_option_price(option_pricing_request: OptionPricingRequest):
     try:
-        result = pricerService.calculate_price(market_data_request)
-        return {
-            "value": result["value"],
-            "delta": result["delta"],
-            "gamma": result["gamma"],
-            "vega": result["vega"],
-            "theta": result["theta"],
-            "rho": result["rho"]
-        }
+        result = pricerService.calculate_price(option_pricing_request)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

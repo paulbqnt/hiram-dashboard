@@ -1,7 +1,8 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
-from typing import Literal
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Literal, Optional, Dict, Union
+
 
 class OptionType(str, Enum):
     EUROPEAN = "EUROPEAN"
@@ -13,24 +14,37 @@ class ModelType(str, Enum):
     MONTE_CARLO = "Monte Carlo"
 
 
-class MarketDataRequest(BaseModel):
-    underlyingPrice: float = Field(..., ge=0.0)
-    volatility: float = Field(..., ge=0.0)
-    riskFreeRate: float = Field(..., ge=0.0)
-    dividendYield: float = Field(..., ge=0.0)
-    strikePrice: float = Field(..., ge=0.0)
-    maturity: float = Field(..., ge=0.0)
+class OptionPricingRequest(BaseModel):
+    underlyingPrice: float = Field(default=100, ge=0.0)
+    volatility: float = Field(default=0.2, ge=0.0)
+    riskFreeRate: float = Field(default=0.05, ge=0.0)
+    dividendYield: float = Field(default=0, ge=0.0)
+    strikePrice: float = Field(default=100, ge=0.0)
+    maturity: float = Field(default=1, ge=0.0)
     optionType: OptionType
-    isCall: bool = True  # Set default value to True
+    isCall: bool = True
     modelType: ModelType
 
 
-class OptionPricingRequest(BaseModel):
-    underlyingPrice: float
-    volatility: float
-    riskFreeRate: float
-    dividendYield: float
-    optionType: str  # "CALL" or "PUT"
-    modelType: ModelType   # "BlackScholes" or "MonteCarlo"
-    strikePrice: float
-    maturity: float
+
+class Greeks(BaseModel):
+    delta: Optional[float] = None
+    gamma: Optional[float] = None
+    vega: Optional[float] = None
+    theta: Optional[float] = None
+    rho: Optional[float] = None
+
+    model_config = ConfigDict(
+        extra='ignore',
+        strict=False
+    )
+
+class PricingResult(BaseModel):
+    value: float
+    greeks: Greeks = Field(default_factory=Greeks)
+
+    def to_json(self) -> Dict[str, Union[float, Dict[str, Optional[float]]]]:
+        return {
+            "value": self.value,
+            "greeks": self.greeks.model_dump()
+        }
