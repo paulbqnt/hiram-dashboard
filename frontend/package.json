@@ -15,6 +15,7 @@
     "@mantine/dates": "^7.17.3",
     "@mantine/form": "^7.17.3",
     "@mantine/hooks": "^7.17.3",
+    "@mantinex/mantine-logo": "^1.1.0",
     "@tanstack/react-router": "^1.114.29",
     "dayjs": "^1.11.13",
     "react": "^19.0.0",
