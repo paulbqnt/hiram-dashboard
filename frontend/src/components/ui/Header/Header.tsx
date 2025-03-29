@@ -32,7 +32,7 @@ export function Header() {
         <header className={classes.header}>
             <Container size="md" className={classes.inner}>
                 <Text component="h4" className={classes.logo}>
-                    Hiram Dashboard
+                    Dashboard
                 </Text>
 
                 <Group gap={5} className={classes.links} visibleFrom="xs">

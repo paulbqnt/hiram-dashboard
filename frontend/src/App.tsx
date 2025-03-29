@@ -1,7 +1,11 @@
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { router } from './routes';
+
+// Create a client
+const queryClient = new QueryClient();
 
 // Create a theme with dark color scheme as default
 const theme = createTheme({
@@ -11,9 +15,11 @@ const theme = createTheme({
 
 const App: React.FC = () => {
     return (
-        <MantineProvider theme={theme} defaultColorScheme="dark">
-            <RouterProvider router={router} />
-        </MantineProvider>
+        <QueryClientProvider client={queryClient}>
+            <MantineProvider theme={theme} defaultColorScheme="dark">
+                <RouterProvider router={router} />
+            </MantineProvider>
+        </QueryClientProvider>
     );
 };
 

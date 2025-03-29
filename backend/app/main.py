@@ -6,8 +6,8 @@ from backend.app.stocks.router import router as stocks_router
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",
-    "localhost:5173"
+    "http://localhost:5173",  # Add your frontend URL here
+    # Add more origins as needed
 ]
 
 app.add_middleware(
@@ -15,9 +15,8 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
-
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"Hello": "World"}

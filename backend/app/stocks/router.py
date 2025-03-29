@@ -4,7 +4,10 @@ from typing import List, Dict
 from backend.app.database import get_db
 from backend.app.stocks.service import StocksService
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/stocks",
+    tags=["stocks"]
+)
 
 @router.get("/data", response_model=List[Dict[str, str]])
 def get_stocks_data(db: Session = Depends(get_db)):
