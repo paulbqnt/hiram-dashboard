@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import classes from './Header.module.css';
 
 const links = [
+    { link: '/', label: 'Home' },
     { link: '/pricer', label: 'Pricer' },
     { link: '/stock', label: 'Stock' },
 ];
