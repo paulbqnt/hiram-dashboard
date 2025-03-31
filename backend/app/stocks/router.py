@@ -9,7 +9,8 @@ router = APIRouter(
     tags=["stocks"]
 )
 
-@router.get("/data", response_model=List[Dict[str, str]])
+
+@router.get("/data/symbols", response_model=List[Dict[str, str]])
 def get_stocks_data(db: Session = Depends(get_db)):
     try:
         stocks_service = StocksService(db)
@@ -17,3 +18,13 @@ def get_stocks_data(db: Session = Depends(get_db)):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{symbol}/data")
+def get_stocks_data(symbol: str):
+    try:
+        stocks_service = StocksService()
+        result = stocks_service.get_stock_data_by_symbol(symbol)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

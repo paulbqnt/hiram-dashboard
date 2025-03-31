@@ -20,7 +20,7 @@ const optionsFilter: OptionsFilter = ({ options, search }) => {
 
 // Function to fetch stock data from the server
 const fetchStockData = async () => {
-    const { data } = await axios.get('http://localhost:8000/api/stocks/data');
+    const { data } = await axios.get('http://localhost:8000/api/stocks/data/symbols');
     return data;
 };
 
