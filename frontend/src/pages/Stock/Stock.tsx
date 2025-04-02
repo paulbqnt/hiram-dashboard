@@ -23,6 +23,7 @@ interface StockSymbol {
 interface StockPriceData {
     date: string;
     close: number;
+    cumulativeReturn: number;
 }
 
 const optionsFilter: OptionsFilter = ({ options, search }) => {
@@ -43,7 +44,9 @@ const fetchStockSymbols = async () => {
 const transformStockData = (data) => {
     return data.map(item => ({
         date: new Date(item.Date).toISOString().split('T')[0], // Format date as YYYY-MM-DD
-        close: item.Close
+        close: item.Close,
+        volume: item.Volume,
+        cumulativeReturn: item.cumulative_return
     }));
 };
 
@@ -134,6 +137,7 @@ const Stock: React.FC = () => {
 
     const filteredPriceData = priceData ? filterDataByTimeRange(priceData) : [];
 
+
     if (symbolsLoading) return <Container><Text>Loading stock symbols...</Text></Container>;
     if (symbolsError) return <Container><Text color="red">Error loading stock symbols</Text></Container>;
 
@@ -182,21 +186,72 @@ const Stock: React.FC = () => {
 
                         {
                             selectedStock && filteredPriceData.length > 0 && (
-                                <div style={{ width: '100%', height: 300 }}>
-                                    <ResponsiveContainer>
-                                        <AreaChart
-                                            data={filteredPriceData}
-                                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
-                                            <YAxis label={{ value: 'Close Price', angle: -90, position: 'insideLeft' }} />
-                                            <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Close Price']} />
-                                            <Legend />
-                                            <Area type="monotone" dataKey="close" stroke="#1c7ed6" fill="#1c7ed6" name="Close Price" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
+
+                                <div>
+                                    <div style={{ width: '100%', height: 400 }}>
+                                        <ResponsiveContainer>
+                                            <AreaChart
+                                                data={filteredPriceData}
+                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
+                                                <YAxis label={{ value: 'Close Price', angle: -90, position: 'insideLeft' }} />
+                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Close Price']} />
+                                                <Legend />
+                                                <Area type="monotone" dataKey="close" stroke="#1c7ed6" fill="#1c7ed6" name="Close Price" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+
+
+                                    </div>
+
+                                    <Title order={3}>
+                                        {selectedStock ? `${selectedStock} Cumulative Return` : 'Select a stock to view price data'}
+                                    </Title>
+                                    <div style={{ width: '100%', height: 400 }}>
+                                        <ResponsiveContainer>
+                                            <AreaChart
+                                                data={filteredPriceData}
+                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
+                                                <YAxis label={{ value: 'Volume', angle: -90, position: 'insideLeft' }} />
+                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'cumulativeReturn']} />
+                                                <Legend />
+                                                <Area type="monotone" dataKey="cumulativeReturn" stroke="#1c7ed6" fill="#1c7ed6" name="Cumulative Return" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+
+
+                                    </div>
+
+                                    <Title order={3}>
+                                        {selectedStock ? `${selectedStock} Volume` : 'Select a stock to view price data'}
+                                    </Title>
+                                    <div style={{ width: '100%', height: 400 }}>
+                                        <ResponsiveContainer>
+                                            <AreaChart
+                                                data={filteredPriceData}
+                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
+                                                <YAxis label={{ value: 'Volume', angle: -90, position: 'insideLeft' }} />
+                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Volume']} />
+                                                <Legend />
+                                                <Area type="monotone" dataKey="volume" stroke="#1c7ed6" fill="#1c7ed6" name="Volume" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+
+
+                                    </div>
                                 </div>
+
+
+
+
                             )}
 
                         {(!selectedStock || !filteredPriceData.length) && !shouldFetchPrice && (
