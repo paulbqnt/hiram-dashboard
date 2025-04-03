@@ -11,7 +11,9 @@ import {
     Text,
     Title,
     LoadingOverlay,
-    Group
+    Group,
+    Badge,
+    Flex
 } from "@mantine/core";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -24,6 +26,11 @@ interface StockPriceData {
     date: string;
     close: number;
     cumulativeReturn: number;
+}
+
+interface StockResponse {
+    price: number;
+    hist: any[];
 }
 
 const optionsFilter: OptionsFilter = ({ options, search }) => {
@@ -54,13 +61,14 @@ const transformStockData = (data) => {
 const fetchStockPriceData = async (symbol: string) => {
     if (!symbol) return null;
     const { data } = await axios.get(`http://localhost:8000/api/stocks/${symbol}/data`);
-    return transformStockData(data.hist); // Transform the data
+    return data as StockResponse; // Return the whole response with price and hist
 };
 
 const Stock: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<string | null>(null);
     const [shouldFetchPrice, setShouldFetchPrice] = useState(false);
     const [timeRange, setTimeRange] = useState<'5y' | '1y' | '6m' | '1m'>('1y');
+    const [analysisRun, setAnalysisRun] = useState(false);
 
     // Query for stock symbols
     const {
@@ -74,7 +82,7 @@ const Stock: React.FC = () => {
 
     // Query for stock price data - only runs when shouldFetchPrice is true
     const {
-        data: priceData,
+        data: stockData,
         error: priceError,
         isLoading: priceLoading,
         refetch: refetchPriceData
@@ -82,14 +90,14 @@ const Stock: React.FC = () => {
         queryKey: ['stockPrice', selectedStock],
         queryFn: () => fetchStockPriceData(selectedStock || ''),
         enabled: shouldFetchPrice && !!selectedStock,
-        onSuccess: (data) => {
-            // Log the first item to see the structure
-            if (data && data.length > 0) {
-                console.log("First data point:", data[0]);
-            }
+        onSuccess: () => {
             setShouldFetchPrice(false); // Reset after successful fetch
         }
     });
+
+    // Extract current price and historical data
+    const currentPrice = stockData?.price;
+    const priceData = stockData?.hist ? transformStockData(stockData.hist) : [];
 
     const stockOptions = React.useMemo(() => {
         if (!symbolsData) return [];
@@ -103,11 +111,13 @@ const Stock: React.FC = () => {
     const handleStockChange = (value: string | null) => {
         setSelectedStock(value);
         setShouldFetchPrice(false); // Reset fetch flag when selection changes
+        setAnalysisRun(false); // Reset analysis state when selection changes
     };
 
     const handleRunAnalysis = () => {
         if (selectedStock) {
             setShouldFetchPrice(true);
+            setAnalysisRun(true);
             refetchPriceData();
         }
     };
@@ -137,12 +147,12 @@ const Stock: React.FC = () => {
 
     const filteredPriceData = priceData ? filterDataByTimeRange(priceData) : [];
 
-
     if (symbolsLoading) return <Container><Text>Loading stock symbols...</Text></Container>;
     if (symbolsError) return <Container><Text color="red">Error loading stock symbols</Text></Container>;
 
     return (
         <Container size="lg">
+            {/* Stock Selection Interface - Always Visible */}
             <Paper withBorder shadow="md" p="md" mt="md" mb="md" radius="md">
                 <Select
                     label="Stock Symbols"
@@ -163,105 +173,97 @@ const Stock: React.FC = () => {
                 </Button>
             </Paper>
 
-            <Paper withBorder shadow="md" p="md" mt="md" radius="md" style={{ position: 'relative', minHeight: '350px' }}>
-                <LoadingOverlay visible={priceLoading} overlayBlur={2} />
-
-                {priceError && (
-                    <Text color="red" align="center">Error loading price data</Text>
-                )}
-
-                {!priceLoading && !priceError && (
-                    <>
-                        <Group position="apart" mb="md">
+            {/* Stock Data Interface - Only Visible After Running Analysis */}
+            {analysisRun && (
+                <>
+                    <Paper withBorder shadow="md" p="md" mt="md" radius="md" style={{ position: 'relative', minHeight: '100px' }}>
+                        <Flex justify="space-between" align="center">
                             <Title order={3}>
-                                {selectedStock ? `${selectedStock} Stock Price` : 'Select a stock to view price data'}
+                                {selectedStock} Stock Price
                             </Title>
-                            <Group>
-                                <Button size="xs" variant={timeRange === '5y' ? 'filled' : 'outline'} onClick={() => setTimeRange('5y')}>5Y</Button>
-                                <Button size="xs" variant={timeRange === '1y' ? 'filled' : 'outline'} onClick={() => setTimeRange('1y')}>1Y</Button>
-                                <Button size="xs" variant={timeRange === '6m' ? 'filled' : 'outline'} onClick={() => setTimeRange('6m')}>6M</Button>
-                                <Button size="xs" variant={timeRange === '1m' ? 'filled' : 'outline'} onClick={() => setTimeRange('1m')}>1M</Button>
-                            </Group>
-                        </Group>
-
-                        {
-                            selectedStock && filteredPriceData.length > 0 && (
-
-                                <div>
-                                    <div style={{ width: '100%', height: 400 }}>
-                                        <ResponsiveContainer>
-                                            <AreaChart
-                                                data={filteredPriceData}
-                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
-                                                <YAxis label={{ value: 'Close Price', angle: -90, position: 'insideLeft' }} />
-                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Close Price']} />
-                                                <Legend />
-                                                <Area type="monotone" dataKey="close" stroke="#1c7ed6" fill="#1c7ed6" name="Close Price" />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
 
 
-                                    </div>
-
-                                    <Title order={3}>
-                                        {selectedStock ? `${selectedStock} Cumulative Return` : 'Select a stock to view price data'}
-                                    </Title>
-                                    <div style={{ width: '100%', height: 400 }}>
-                                        <ResponsiveContainer>
-                                            <AreaChart
-                                                data={filteredPriceData}
-                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
-                                                <YAxis label={{ value: 'Volume', angle: -90, position: 'insideLeft' }} />
-                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'cumulativeReturn']} />
-                                                <Legend />
-                                                <Area type="monotone" dataKey="cumulativeReturn" stroke="#1c7ed6" fill="#1c7ed6" name="Cumulative Return" />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
-
-
-                                    </div>
-
-                                    <Title order={3}>
-                                        {selectedStock ? `${selectedStock} Volume` : 'Select a stock to view price data'}
-                                    </Title>
-                                    <div style={{ width: '100%', height: 400 }}>
-                                        <ResponsiveContainer>
-                                            <AreaChart
-                                                data={filteredPriceData}
-                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
-                                                <YAxis label={{ value: 'Volume', angle: -90, position: 'insideLeft' }} />
-                                                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Volume']} />
-                                                <Legend />
-                                                <Area type="monotone" dataKey="volume" stroke="#1c7ed6" fill="#1c7ed6" name="Volume" />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
-
-
-                                    </div>
-                                </div>
+                        </Flex>
+                        {currentPrice !== undefined && (
+                            <div>
+                                <Title order={1}>
+                                    $ {currentPrice}
+                                </Title>
+                            </div>
 
 
 
-
-                            )}
-
-                        {(!selectedStock || !filteredPriceData.length) && !shouldFetchPrice && (
-                            <Text align="center" color="dimmed">
-                                Select a stock and click "Run Analysis" to view price data
-                            </Text>
                         )}
-                    </>
-                )}
-            </Paper>
+                    </Paper>
+
+                    <Paper withBorder shadow="md" p="md" mt="md" radius="md" style={{ position: 'relative', minHeight: '350px' }}>
+                        <LoadingOverlay visible={priceLoading} overlayBlur={2} />
+
+                        {priceError && (
+                            <Text color="red" align="center">Error loading price data</Text>
+                        )}
+
+                        {!priceLoading && !priceError && (
+                            <>
+                                <Title order={3}>
+                                    Historical Prices
+                                </Title>
+                                <Group position="apart" mb="md">
+                                    <Group>
+                                        <Button size="xs" variant={timeRange === '5y' ? 'filled' : 'outline'} onClick={() => setTimeRange('5y')}>5Y</Button>
+                                        <Button size="xs" variant={timeRange === '1y' ? 'filled' : 'outline'} onClick={() => setTimeRange('1y')}>1Y</Button>
+                                        <Button size="xs" variant={timeRange === '6m' ? 'filled' : 'outline'} onClick={() => setTimeRange('6m')}>6M</Button>
+                                        <Button size="xs" variant={timeRange === '1m' ? 'filled' : 'outline'} onClick={() => setTimeRange('1m')}>1M</Button>
+                                    </Group>
+                                </Group>
+
+                                {filteredPriceData.length > 0 ? (
+                                    <div>
+                                        <div style={{ width: '100%', height: 400 }}>
+                                            <ResponsiveContainer>
+                                                <AreaChart
+                                                    data={filteredPriceData}
+                                                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
+                                                    <YAxis label={{ value: 'Close Price', angle: -90, position: 'insideLeft' }} />
+                                                    <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Close Price']} />
+                                                    <Legend />
+                                                    <Area type="monotone" dataKey="close" stroke="#1c7ed6" fill="#1c7ed6" name="Close Price" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        <Title order={3} mt="xl">
+                                            Trading Volume
+                                        </Title>
+                                        <div style={{ width: '100%', height: 400 }}>
+                                            <ResponsiveContainer>
+                                                <AreaChart
+                                                    data={filteredPriceData}
+                                                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="date" label={{ value: 'Date', position: 'insideBottomRight', offset: 0 }} />
+                                                    <YAxis label={{ value: 'Volume', angle: -90, position: 'insideLeft' }} />
+                                                    <Tooltip formatter={(value) => [`${value.toLocaleString()}`, 'Volume']} />
+                                                    <Legend />
+                                                    <Area type="monotone" dataKey="volume" stroke="#1c7ed6" fill="#1c7ed6" name="Volume" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Text align="center" color="dimmed">
+                                        No data available for the selected time range
+                                    </Text>
+                                )}
+                            </>
+                        )}
+                    </Paper>
+                </>
+            )}
         </Container>
     );
 };
