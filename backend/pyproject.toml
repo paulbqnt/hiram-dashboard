@@ -1,0 +1,17 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.12",
+    "hiram-pricing",
+    "pandas>=2.2.3",
+    "sqlalchemy>=2.0.40",
+    "uvicorn>=0.34.0",
+    "yfinance>=0.2.55",
+]
+
+[tool.uv.sources]
+hiram-pricing = { git = "https://github.com/paulbqnt/hiram-pricing.git" }
