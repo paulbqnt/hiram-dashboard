@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, RootRoute, Router } from '@tanstack/react-router';
 import Pricer from './pages/Pricer/Pricer';
 import Stock from './pages/Stock/Stock';
+import Portfolio from './pages/Portfolio/Portfolio';
 import Layout from './layouts/Layout';
 import Home from './pages/Home/Home'; // Import the Home component
 
@@ -28,8 +29,14 @@ const stockRoute = new Route({
     component: Stock,
 });
 
+const portfolioRoute = new Route({
+    getParentRoute: () => rootRoute,
+    path: 'portfolio',
+    component: Portfolio,
+});
+
 // Create a route tree and include the homeRoute
-const routeTree = rootRoute.addChildren([homeRoute, pricerRoute, stockRoute]);
+const routeTree = rootRoute.addChildren([homeRoute, pricerRoute, stockRoute, portfolioRoute]);
 
 // Create a router instance
 const router = new Router({ routeTree });

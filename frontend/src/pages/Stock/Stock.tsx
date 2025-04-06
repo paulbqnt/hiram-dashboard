@@ -43,8 +43,14 @@ const optionsFilter: OptionsFilter = ({ options, search }) => {
 
 // Function to fetch stock symbols from the server
 const fetchStockSymbols = async () => {
-    const { data } = await axios.get('http://localhost:8001/api/stocks/data/symbols');
-    return data as StockSymbol[];
+    try {
+        const { data } = await axios.get('http://localhost:8000/api/stocks/data/symbols');
+        console.log("Fetched stock symbols:", data);
+        return data as StockSymbol[];
+    } catch (error) {
+        console.error("Error fetching stock symbols:", error);
+        throw error;
+    }
 };
 
 // Function to transform backend data to frontend expected format
@@ -60,8 +66,14 @@ const transformStockData = (data) => {
 // Function to fetch price data for a specific stock
 const fetchStockPriceData = async (symbol: string) => {
     if (!symbol) return null;
-    const { data } = await axios.get(`http://localhost:8001/api/stocks/${symbol}/data`);
-    return data as StockResponse; // Return the whole response with price and hist
+    try {
+        const { data } = await axios.get(`http://localhost:8000/api/stocks/${symbol}/data`);
+        console.log("Fetched stock price data:", data);
+        return data as StockResponse;
+    } catch (error) {
+        console.error("Error fetching stock price data:", error);
+        throw error;
+    }
 };
 
 const Stock: React.FC = () => {
