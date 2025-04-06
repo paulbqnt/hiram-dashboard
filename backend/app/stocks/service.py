@@ -37,6 +37,7 @@ def calculate_performance(hist, days):
         return None
 
 
+
 def calculate_ytd_performance(hist):
     try:
         if hist['Date'].dt.tz is not None:

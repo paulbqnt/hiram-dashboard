@@ -43,7 +43,7 @@ const optionsFilter: OptionsFilter = ({ options, search }) => {
 
 // Function to fetch stock symbols from the server
 const fetchStockSymbols = async () => {
-    const { data } = await axios.get('http://localhost:8000/api/stocks/data/symbols');
+    const { data } = await axios.get('http://localhost:8001/api/stocks/data/symbols');
     return data as StockSymbol[];
 };
 
@@ -60,7 +60,7 @@ const transformStockData = (data) => {
 // Function to fetch price data for a specific stock
 const fetchStockPriceData = async (symbol: string) => {
     if (!symbol) return null;
-    const { data } = await axios.get(`http://localhost:8000/api/stocks/${symbol}/data`);
+    const { data } = await axios.get(`http://localhost:8001/api/stocks/${symbol}/data`);
     return data as StockResponse; // Return the whole response with price and hist
 };
 
