@@ -1,0 +1,15 @@
+[project]
+name = "hiram-dashboard"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.12",
+    "hiram-pricing",
+    "numpy>=2.2.4",
+    "sqlalchemy>=2.0.40",
+    "uvicorn>=0.34.0",
+]
+
+[tool.uv.sources]
+hiram-pricing = { git = "https://github.com/paulbqnt/hiram-pricing.git" }
