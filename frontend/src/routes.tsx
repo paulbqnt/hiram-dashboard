@@ -4,7 +4,8 @@ import Pricer from './pages/Pricer/Pricer';
 import Stock from './pages/Stock/Stock';
 import Portfolio from './pages/Portfolio/Portfolio';
 import Layout from './layouts/Layout';
-import Home from './pages/Home/Home'; // Import the Home component
+import Home from './pages/Home/Home';
+import About from "./pages/About/About.tsx"; // Import the Home component
 
 // Define your routes
 const rootRoute = new RootRoute({
@@ -35,8 +36,14 @@ const portfolioRoute = new Route({
     component: Portfolio,
 });
 
+const aboutRoute = new Route({
+    getParentRoute: () => rootRoute,
+    path: 'about',
+    component: About,
+});
+
 // Create a route tree and include the homeRoute
-const routeTree = rootRoute.addChildren([homeRoute, pricerRoute, stockRoute, portfolioRoute]);
+const routeTree = rootRoute.addChildren([homeRoute, pricerRoute, stockRoute, portfolioRoute, aboutRoute]);
 
 // Create a router instance
 const router = new Router({ routeTree });

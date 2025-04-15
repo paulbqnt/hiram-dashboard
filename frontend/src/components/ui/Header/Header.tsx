@@ -9,6 +9,7 @@ const links = [
     { link: '/pricer', label: 'Pricer' },
     { link: '/stock', label: 'Stock' },
     { link: '/portfolio', label: 'Portfolio' },
+    { link: '/about', label: 'About' },
 ];
 
 export function Header() {
