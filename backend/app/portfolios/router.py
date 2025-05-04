@@ -5,7 +5,7 @@ from backend.app.database import get_db
 from backend.app.stocks.service import StocksService
 
 router = APIRouter(
-    prefix="/api/stocks",
+    prefix="/api/v1/stocks",
     tags=["stocks"]
 )
 

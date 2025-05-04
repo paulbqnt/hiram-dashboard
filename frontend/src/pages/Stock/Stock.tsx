@@ -46,8 +46,8 @@ interface StockResponse {
     hist: any[];
     market_cap: number;
     pe_ratio: number;
-    dividend_yield: number;
     beta: number;
+    dividend_yield: number;
     fifty_two_week_high: number;
     fifty_two_week_low: number;
     ma_50: number;
@@ -68,7 +68,7 @@ const optionsFilter: OptionsFilter = ({ options, search }) => {
 // Function to fetch stock symbols from the server
 const fetchStockSymbols = async () => {
     try {
-        const { data } = await axios.get('http://localhost:8000/api/stocks/reference/data/symbols');
+        const { data } = await axios.get('http://localhost:8000/api/v1/stocks/reference/data/symbols');
         console.log("Fetched stock symbols:", data);
         return data as StockSymbol[];
     } catch (error) {
@@ -136,6 +136,7 @@ const Stock: React.FC = () => {
         data: stockData,
         error: priceError,
         isLoading: priceLoading,
+
         refetch: refetchPriceData
     } = useQuery({
         queryKey: ['stockPrice', selectedStock],
@@ -148,6 +149,7 @@ const Stock: React.FC = () => {
 
     // Extract current price and historical data
     const currentPrice = stockData?.price;
+    const beta = stockData?.beta;
     const priceData = stockData?.hist ? transformStockData(stockData.hist) : [];
 
     const stockOptions = React.useMemo(() => {

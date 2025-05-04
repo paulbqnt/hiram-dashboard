@@ -18,8 +18,10 @@ import {
   Alert
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconCheck, IconPlus } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useMutation } from '@tanstack/react-query';
+import axios from "axios";
 
 // Define interface for form values
 interface PricerFormValues {
@@ -27,12 +29,12 @@ interface PricerFormValues {
   strike: number;
   riskFreeRate: number;
   volatility: number;
-  optionType: string;
+  optionFamily: string;
   payoffType: string;
   pricingEngine: string;
-  model: string;
-  optionDirection: string;
-  dividend: number;
+  modelType: string;
+  optionType: string;
+  dividendYield: number;
   maturity: number;
   stockSymbol: string | null;
 }
@@ -48,7 +50,7 @@ interface PricingResult {
     rho: number;
   };
   payoffData: Array<{ spot: number; payoff: number }>;
-  greeksData: {
+  greeks: {
     delta: Array<{ x: number; value: number }>;
     gamma: Array<{ x: number; value: number }>;
     theta: Array<{ x: number; value: number }>;
@@ -56,12 +58,15 @@ interface PricingResult {
   };
 }
 
+
+
+
 const Pricer: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('price');
-  const [addedToPortfolio, setAddedToPortfolio] = useState<boolean>(false);
+  // const [addedToPortfolio, setAddedToPortfolio] = useState<boolean>(false);
 
   // Sample stock data for the dropdown
   const stockOptions = [
@@ -77,6 +82,32 @@ const Pricer: React.FC = () => {
     { value: 'JNJ', label: 'Johnson & Johnson (JNJ)' }
   ];
 
+  const priceOption = async (values: PricerFormValues): Promise<PricingResult> => {
+    const response = await axios.post<PricingResult>('http://localhost:8000/api/v1/pricer/options/price', values);
+    return response.data;
+  };
+
+  // React Query mutation hook
+  const { mutate: submitPricing, isLoading } = useMutation({
+    mutationFn: priceOption,
+    onSuccess: (data) => {
+      setResult(data);
+    },
+    onError: () => {
+      setError('Error pricing option. Please try again.');
+    },
+  });
+
+  // Form submit handler
+  const handleSubmit = (values: PricerFormValues) => {
+    setError(null);
+    submitPricing(values); // ✅ This must be in the same scope
+  };
+
+
+
+
+
   // Initialize form with defaults
   const form = useForm<PricerFormValues>({
     initialValues: {
@@ -84,12 +115,12 @@ const Pricer: React.FC = () => {
       strike: 100,
       riskFreeRate: 0.05,
       volatility: 0.2,
-      optionType: 'european',
+      optionFamily: 'european',
       payoffType: 'vanilla',
       pricingEngine: 'analytical',
-      model: 'black_scholes',
-      optionDirection: 'call',
-      dividend: 0,
+      modelType: 'black_scholes',
+      optionType: 'CALL',
+      dividendYield: 0,
       maturity: 1,
       stockSymbol: null
     },
@@ -101,83 +132,24 @@ const Pricer: React.FC = () => {
     },
   });
 
-  // Handle form submission
-  const handleSubmit = async (values: PricerFormValues) => {
-    setLoading(true);
-    setError(null);
-    setAddedToPortfolio(false);
 
-    try {
-      // In a real app, you would call your backend API here
-      // For demonstration, let's simulate an API call with a timeout
-      setTimeout(() => {
-        // Mock response data
-        const mockResult: PricingResult = {
-          price: 10.45,
-          greeks: {
-            delta: 0.65,
-            gamma: 0.04,
-            theta: -0.11,
-            vega: 0.35,
-            rho: 0.15
-          },
-          payoffData: Array.from({ length: 20 }, (_, i) => ({
-            spot: values.spot * 0.7 + (values.spot * 0.6 * i) / 19,
-            payoff: values.optionDirection === 'call'
-                ? Math.max(0, (values.spot * 0.7 + (values.spot * 0.6 * i) / 19) - values.strike)
-                : Math.max(0, values.strike - (values.spot * 0.7 + (values.spot * 0.6 * i) / 19))
-          })),
-          greeksData: {
-            delta: Array.from({ length: 10 }, (_, i) => ({
-              x: values.spot * 0.8 + (values.spot * 0.4 * i) / 9,
-              value: values.optionDirection === 'call' ? 0.3 + (i * 0.07) : -0.3 - (i * 0.07)
-            })),
-            gamma: Array.from({ length: 10 }, (_, i) => ({
-              x: values.spot * 0.8 + (values.spot * 0.4 * i) / 9,
-              value: 0.05 - Math.abs((i - 5) * 0.008)
-            })),
-            theta: Array.from({ length: 10 }, (_, i) => ({
-              x: values.spot * 0.8 + (values.spot * 0.4 * i) / 9,
-              value: -0.1 - (i * 0.01)
-            })),
-            vega: Array.from({ length: 10 }, (_, i) => ({
-              x: values.spot * 0.8 + (values.spot * 0.4 * i) / 9,
-              value: 0.35 - (Math.abs(i - 5) * 0.03)
-            }))
-          }
-        };
-
-        setResult(mockResult);
-        setLoading(false);
-      }, 800);
-    } catch (err) {
-      setError('Error pricing option. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleAddToPortfolio = () => {
-    // In a real app, you would call an API to add this to portfolio
-    setAddedToPortfolio(true);
-    setTimeout(() => setAddedToPortfolio(false), 3000);
-  };
 
   // Handle stock selection
   const handleStockSelect = (stockSymbol: string | null) => {
     // In a real app, you would fetch stock data and update the form values
     if (stockSymbol) {
       // Mock data for demonstration
-      const stockData: Record<string, { price: number, volatility: number, dividend: number }> = {
-        'AAPL': { price: 175.23, volatility: 0.22, dividend: 0.0053 },
-        'MSFT': { price: 327.89, volatility: 0.20, dividend: 0.0082 },
-        'AMZN': { price: 142.56, volatility: 0.25, dividend: 0 },
-        'GOOGL': { price: 132.45, volatility: 0.18, dividend: 0 },
-        'TSLA': { price: 245.67, volatility: 0.35, dividend: 0 },
-        'META': { price: 320.54, volatility: 0.28, dividend: 0 },
-        'NVDA': { price: 450.32, volatility: 0.32, dividend: 0.0037 },
-        'JPM': { price: 142.56, volatility: 0.15, dividend: 0.0245 },
-        'V': { price: 230.45, volatility: 0.16, dividend: 0.0075 },
-        'JNJ': { price: 155.67, volatility: 0.12, dividend: 0.0280 }
+      const stockData: Record<string, { price: number, volatility: number, dividendYield: number }> = {
+        'AAPL': { price: 175.23, volatility: 0.22, dividendYield: 0.0053 },
+        'MSFT': { price: 327.89, volatility: 0.20, dividendYield: 0.0082 },
+        'AMZN': { price: 142.56, volatility: 0.25, dividendYield: 0 },
+        'GOOGL': { price: 132.45, volatility: 0.18, dividendYield: 0 },
+        'TSLA': { price: 245.67, volatility: 0.35, dividendYield: 0 },
+        'META': { price: 320.54, volatility: 0.28, dividendYield: 0 },
+        'NVDA': { price: 450.32, volatility: 0.32, dividendYield: 0.0037 },
+        'JPM': { price: 142.56, volatility: 0.15, dividendYield: 0.0245 },
+        'V': { price: 230.45, volatility: 0.16, dividendYield: 0.0075 },
+        'JNJ': { price: 155.67, volatility: 0.12, dividendYield: 0.0280 }
       };
 
       const selectedStock = stockData[stockSymbol];
@@ -187,7 +159,7 @@ const Pricer: React.FC = () => {
           ...form.values,
           spot: selectedStock.price,
           volatility: selectedStock.volatility,
-          dividend: selectedStock.dividend,
+          dividendYield: selectedStock.dividendYield,
           stockSymbol
         });
       }
@@ -269,7 +241,7 @@ const Pricer: React.FC = () => {
                     step={0.001}
                     min={0}
                     max={1}
-                    {...form.getInputProps('dividend')}
+                    {...form.getInputProps('dividendYield')}
                     rightSection={<Text size="sm">%</Text>}
                 />
               </Grid.Col>
@@ -332,16 +304,16 @@ const Pricer: React.FC = () => {
 
               <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <Select
-                    label="Option Type"
-                    placeholder="Select option type"
+                    label="Option Family"
+                    placeholder="Select option Family"
                     data={[
-                      { value: 'european', label: 'European' },
+                      { value: 'EUROPEAN', label: 'EUROPEAN' },
                       // { value: 'american', label: 'American' },
                       // { value: 'bermudan', label: 'Bermudan' },
                       // { value: 'asian', label: 'Asian' }
                     ]}
                     required
-                    {...form.getInputProps('optionType')}
+                    {...form.getInputProps('optionFamily')}
                 />
               </Grid.Col>
 
@@ -364,13 +336,13 @@ const Pricer: React.FC = () => {
               <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <Select
                     label="Type"
-                    placeholder="Select option direction"
+                    placeholder="Select option type"
                     data={[
-                      { value: 'call', label: 'Call' },
-                      { value: 'put', label: 'Put' }
+                      { value: 'CALL', label: 'Call' },
+                      { value: 'PUT', label: 'Put' }
                     ]}
                     required
-                    {...form.getInputProps('optionDirection')}
+                    {...form.getInputProps('optionType')}
                 />
               </Grid.Col>
 
@@ -385,13 +357,13 @@ const Pricer: React.FC = () => {
                     label="Pricing Model"
                     placeholder="Select pricing model"
                     data={[
-                      { value: 'black_scholes', label: 'Black-Scholes' },
+                      { value: 'Black Scholes', label: 'Black Scholes' },
                       { value: 'binomial', label: 'Binomial Tree' },
                       { value: 'monte_carlo', label: 'Monte Carlo' },
                       // { value: 'heston', label: 'Heston' }
                     ]}
                     required
-                    {...form.getInputProps('model')}
+                    {...form.getInputProps('modelType')}
                 />
               </Grid.Col>
 
@@ -423,14 +395,14 @@ const Pricer: React.FC = () => {
             <Paper withBorder shadow="md" p="md" mt="md" radius="md">
               <Group position="apart" mb="md">
                 <Title order={3}>Pricing Results {form.values.stockSymbol && `for ${form.values.stockSymbol}`}</Title>
-                <Button
-                    leftIcon={<IconPlus size={16} />}
-                    color={addedToPortfolio ? "green" : "blue"}
-                    onClick={handleAddToPortfolio}
-                    disabled={addedToPortfolio}
-                >
-                  {addedToPortfolio ? "Added to Portfolio" : "Add to Portfolio"}
-                </Button>
+                {/*<Button*/}
+                {/*    leftIcon={<IconPlus size={16} />}*/}
+                {/*    color={addedToPortfolio ? "green" : "blue"}*/}
+                {/*    onClick={handleAddToPortfolio}*/}
+                {/*    disabled={addedToPortfolio}*/}
+                {/*>*/}
+                {/*  {addedToPortfolio ? "Added to Portfolio" : "Add to Portfolio"}*/}
+                {/*</Button>*/}
               </Group>
 
               {error && (
@@ -443,9 +415,9 @@ const Pricer: React.FC = () => {
                 <Grid.Col span={12} md={6}>
                   <Paper withBorder p="md">
                     <Text size="lg" weight={500} mb="md">Option Price</Text>
-                    <Title order={2}>${result.price.toFixed(2)}</Title>
+                    <Title order={2}>${result.value.toFixed(2)}</Title>
                     <Text size="sm" color="dimmed">
-                      {form.values.optionDirection.toUpperCase()} option with strike ${form.values.strike}
+                      {form.values.optionType.toUpperCase()} option with strike ${form.values.strike}
                       {form.values.stockSymbol && ` on ${form.values.stockSymbol}`}
                     </Text>
                   </Paper>
@@ -491,7 +463,7 @@ const Pricer: React.FC = () => {
 
                 <Tabs.Panel value="payoff" pt="md">
                   <Text size="sm" mb="md">
-                    Payoff profile at expiration for {form.values.optionDirection} option with strike ${form.values.strike}
+                    Payoff profile at expiration for {form.values.optionType} option with strike ${form.values.strike}
                     {form.values.stockSymbol && ` on ${form.values.stockSymbol}`}
                   </Text>
                   <Box h={300}>
@@ -513,8 +485,8 @@ const Pricer: React.FC = () => {
                             type="monotone"
                             dataKey="payoff"
                             name="Payoff"
-                            stroke={form.values.optionDirection === 'call' ? '#8884d8' : '#82ca9d'}
-                            fill={form.values.optionDirection === 'call' ? '#8884d8' : '#82ca9d'}
+                            stroke={form.values.optionType === 'CALL' ? '#8884d8' : '#82ca9d'}
+                            fill={form.values.optionType === 'CALL' ? '#8884d8' : '#82ca9d'}
                             fillOpacity={0.3}
                         />
                       </AreaChart>
@@ -526,7 +498,7 @@ const Pricer: React.FC = () => {
                   <Text size="sm" mb="md">Delta measures the rate of change of the option value with respect to changes in the underlying price</Text>
                   <Box h={300}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={result.greeksData.delta}>
+                      <LineChart data={result.greeks.delta}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="x"
@@ -549,7 +521,7 @@ const Pricer: React.FC = () => {
                   <Text size="sm" mb="md">Gamma measures the rate of change in delta with respect to changes in the underlying price</Text>
                   <Box h={300}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={result.greeksData.gamma}>
+                      <LineChart data={result.greeks.gamma}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="x"
@@ -572,7 +544,7 @@ const Pricer: React.FC = () => {
                   <Text size="sm" mb="md">Theta measures the rate of change of the option value with respect to time</Text>
                   <Box h={300}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={result.greeksData.theta}>
+                      <LineChart data={result.greeks.theta}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="x"
@@ -595,7 +567,7 @@ const Pricer: React.FC = () => {
                   <Text size="sm" mb="md">Vega measures sensitivity to volatility</Text>
                   <Box h={300}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={result.greeksData.vega}>
+                      <LineChart data={result.greeks.vega}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="x"

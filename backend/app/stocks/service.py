@@ -2,11 +2,13 @@ from typing import List, Dict, Optional, Any
 from sqlalchemy.orm import Session
 from backend.app.stocks.repository import StockRepository
 from backend.app.database import get_db
-from hiram_pricing.stock import Stock
+import yfinance as yf
 import numpy as np
 import pandas as pd
 from fastapi import status
 from fastapi.responses import JSONResponse
+
+from backend.app.stocks.utils import FIELDS
 
 
 def calculate_performance(hist, days):
@@ -35,7 +37,6 @@ def calculate_performance(hist, days):
     except Exception as e:
         print(f"Error calculating performance for {days} days: {e}")
         return None
-
 
 
 def calculate_ytd_performance(hist):
@@ -113,9 +114,9 @@ class StocksService:
 
     def get_stock_data_by_symbol(self, symbol: str):
         try:
-            stock = Stock(ticker=symbol)
-            hist = stock.hist.copy()  # Create an explicit copy
-
+            stock = yf.Ticker(symbol)
+            hist = stock.history(period="5y")  # Create an explicit copy
+            stock_info_needed = {k: v for k in FIELDS if (v := stock.info.get(k)) is not None}
             hist['Date'] = hist.index
             if pd.api.types.is_datetime64_any_dtype(hist['Date']):
                 hist['Date'] = hist['Date'].dt.to_pydatetime()
@@ -153,25 +154,39 @@ class StocksService:
             # Remove None values for JSON compliance
             performance = {k: v for k, v in performance.items() if v is not None}
 
-            # Extract price and ensure it's a regular Python float
+            # Get the current price correctly from yfinance API
+            # First try the fast_info property which is recommended by yfinance
             price = None
-            if hasattr(stock, 'price') and stock.price is not None:
-                try:
-                    if isinstance(stock.price, (np.float64, np.float32)):
-                        price = float(stock.price)
-                    else:
-                        price = stock.price
+            try:
+                # First method: Use fast_info.last_price which is the recommended method
+                if hasattr(stock, 'fast_info') and hasattr(stock.fast_info, 'last_price'):
+                    price = stock.fast_info.last_price
+                # Second method: Use the last closing price from history
+                elif not hist.empty and hist['Close'].iloc[-1] is not None:
+                    price = hist['Close'].iloc[-1]
+                # Third method: Try the direct info dictionary
+                elif 'regularMarketPrice' in stock.info:
+                    price = stock.info['regularMarketPrice']
+                elif 'currentPrice' in stock.info:
+                    price = stock.info['currentPrice']
+
+                # Ensure price is a proper float
+                if price is not None:
+                    if isinstance(price, (np.float64, np.float32)):
+                        price = float(price)
 
                     # Check if price is a finite number
                     if not np.isfinite(price):
                         price = None
-                except:
-                    price = None
+            except Exception as price_error:
+                print(f"Error getting price for {symbol}: {str(price_error)}")
+                price = None
 
             response = {
                 "price": round(price, 2) if price is not None else None,
                 "performance": performance,
-                "hist": hist
+                "hist": hist,
+                "info": stock_info_needed
             }
 
             return make_json_serializable(response)

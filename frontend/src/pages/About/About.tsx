@@ -39,7 +39,7 @@ const About: React.FC = () => {
                 <Title order={1} mb={20} size="h1">Hey, I'm Paul Boquant</Title>
 
                 <Text size="xl" mb={30}>
-                    I build powerful financial tools. This dashboard showcases
+                    I build financial tools. This dashboard showcases
                     <Anchor href="https://github.com/paulbqnt/hiram-pricing" target="_blank" weight={700}> Hiram</Anchor>,
                     my option pricing library that makes option pricing simple.
                 </Text>
